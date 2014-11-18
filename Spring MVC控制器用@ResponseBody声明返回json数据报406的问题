@@ -1,0 +1,50 @@
+http://www.cnblogs.com/tanglc/p/3664795.html
+
+本打算今天早点下班，结果下午测试调试程序发现一个问题纠结到晚上才解决，现在写一篇博客来总结下。
+
+　　是这样的，本人在Spring mvc控制层用到了@ResponseBody标注，以便返回的数据为json格式的数据，到前端JS中用。
+
+　　问题来了，当我用火狐调试发现请求总是报:406 Not Acceptable，message:description The resource identified by this request is only capable of generating responses with characteristics not acceptable according to the request "accept" headers ()错误。(说是指定的资源已经找到，但它的MIME类型和客户在Accpet头中所指定的不兼容)。
+
+　　于是楼主那个纠结，那个郁闷啊。BUG了又BUG，百度了又百度,又怀疑是引用的ext.js文件有问题，因为报ext.base和ext.all语法错误。最后发现是mime类型不匹配。由于我要返回的是json数据，而浏览器接受的是text/html;charset=UTF-8文本类型。不过发现问题还有好几个，一一解决之：
+
+未在pom文件中引入json的转换包。需要引入如下2个包：
+复制代码
+  <!-- jackson start -->
+  <dependency>
+   <groupId>org.codehaus.jackson</groupId>
+   <artifactId>jackson-core-asl</artifactId>
+  </dependency>
+  <dependency>
+   <groupId>org.codehaus.jackson</groupId>
+   <artifactId>jackson-mapper-lgpl</artifactId>
+   <version>1.9.12</version>
+  </dependency>
+  <!-- jackson end -->
+复制代码
+　　2.  spring-servlet.xml文件中需要配置转换的bean
+
+复制代码
+    <bean
+        class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter">
+        <property name="messageConverters">
+            <util:list id="beanList">
+                <ref bean="mappingJacksonHttpMessageConverter" />
+            </util:list>
+        </property>
+    </bean>
+    <bean id="mappingJacksonHttpMessageConverter"
+        class="org.springframework.http.converter.json.MappingJacksonHttpMessageConverter">
+        <property name="supportedMediaTypes">
+            <list>
+                <value>text/html;charset=UTF-8</value>
+            </list>
+        </property>
+    </bean>
+复制代码
+  3.  最后，别忘了还要声明util的schema文件和地址，在spring-servlet.xml文件的头部声明部分加入如下三行即可
+
+xmlns:util="http://www.springframework.org/schema/util"
+       http://www.springframework.org/schema/util
+    http://www.springframework.org/schema/util/spring-util-3.0.xsd
+  OK，搞定，大功告成，下班~~~
