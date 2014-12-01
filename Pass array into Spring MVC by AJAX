@@ -1,0 +1,7 @@
+http://stackoverflow.com/questions/25134795/pass-array-into-spring-mvc-by-ajax
+
+
+So, i found a error, problem was in [] for parameter departments. If use traditional: true for jQuery AJAX request than POST array variable will not contain [] in name and Spring mapping it in POJO
+
+google key
+traditional: true for jQuery AJAX request than POST array variable will not contain []
