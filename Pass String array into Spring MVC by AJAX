@@ -1,0 +1,35 @@
+http://stackoverflow.com/questions/25134795/pass-array-into-spring-mvc-by-ajax
+
+String array or Integer Array
+
+So, i found a error, problem was in [] for parameter departments. If use traditional: true for jQuery AJAX request than POST array variable will not contain [] in name and Spring mapping it in POJO
+
+google key
+traditional: true for jQuery AJAX request than POST array variable will not contain []
+
+成功解決方法
+Try the following, no need to change your controller's method signature or create an object to hold your ids.
+
+$.post("/todonotes/tasks/removeTask", {selectedIds: selectedIds.join(',')},function(e) {  
+}, "json");
+
+That way you'll be sending your ids like selectedIds: id1,id2,id3 which is how the Controller is expecting them to be if you declare your request param to be String[] or List<String> (works for both scenarios).
+
+javascript:
+$scope.CheckRoleFun = function (){
+    var checkedNodes = [],
+        treeView = $scope.uamRoleTreeView,
+        functionNoListArr;
+
+    $scope.CheckRoleFunNodeIds(treeView.dataSource.view(), checkedNodes);
+
+    if (checkedNodes.length > 0) {
+        functionNoListArr = checkedNodes.join(",");
+    } else {
+        functionNoListArr = "";
+    }
+    $scope.fwuser.functionNoList = functionNoListArr.join(",");
+}
+
+java:
+List<String> functionNoList;
