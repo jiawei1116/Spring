@@ -1,0 +1,89 @@
+在Spring 2.0中，Pointcut的定義包括兩個部分：Pointcut表示式(expression)和Pointcut簽名(signature)。讓我們先看看execution表示式的格式：
+java 代碼
+1.	execution(modifier-pattern?
+2.	          ret-type-pattern
+3.	          declaring-type-pattern?
+4.	          name-pattern(param-pattern)
+5.	          throws-pattern?)
+
+括弧中各個pattern分別表示修飾符匹配（modifier-pattern?）、返回值匹配（ret-type-pattern）、類路徑匹配（declaring-type-pattern?）、方法名匹配（name-pattern）、參數匹配（(param-pattern)）、異常類型匹配（throws-pattern?），其中後面跟著“?”的是可選項。
+在各個pattern中可以使用“*”來表示匹配所有。在(param-pattern)中，可以指定具體的參數類型，多個參數間用“,”隔開，各個也可以用“*”來表示匹配任意類型的參數，如(String)表示匹配一個String參數的方法；(*,String)表示匹配有兩個參數的方法，第一個參數可以是任意類型，而第二個參數是String類型；可以用(..)表示零個或多個任意參數。
+現在來看看幾個例子：
+1）execution(* *(..))
+表示匹配所有方法
+2）execution(public * com. savage.service.UserService.*(..))
+表示匹配com.savage.server.UserService中所有的公有方法
+3）execution(* com.savage.server..*.*(..))
+表示匹配com.savage.server包及其子包下的所有方法
+除了execution表示式外，還有within、this、target、args等Pointcut表示式。一個Pointcut定義由Pointcut表示式和Pointcut簽名組成，例如：
+java 代碼
+1.	//Pointcut表示式
+2.	@Pointcut("execution(* com.savage.aop.MessageSender.*(..))")
+3.	//Point簽名
+4.	private void log(){}                             
+
+然後要使用所定義的Pointcut時，可以指定Pointcut簽名，如
+java 代碼
+1.	@Before("og()")
+
+上面的定義等同與：
+
+java 代碼
+1.	@Before("execution(* com.savage.aop.MessageSender.*(..))")
+
+Pointcut定義時，還可以使用&&、||、!運算，如：
+java 代碼
+1.	@Pointcut("execution(* com.savage.aop.MessageSender.*(..))")
+2.	private void logSender(){}
+3.	
+4.	@Pointcut("execution(* com.savage.aop.MessageReceiver.*(..))")
+5.	private void logReceiver(){}
+6.	
+7.	@Pointcut("logSender() || logReceiver()")
+8.	private void logMessage(){}
+
+這個例子中，logMessage()將匹配任何MessageSender和MessageReceiver中的任何方法。
+還可以將一些公用的Pointcut放到一個類中，以供整個應用程式使用，如：
+java 代碼
+1.	package com.savage.aop;
+2.	
+3.	import org.aspectj.lang.annotation.*;
+4.	
+5.	public class Pointcuts {
+6.	   @Pointcut("execution(* *Message(..))")
+7.	   public void logMessage(){}
+8.	
+9.	   @Pointcut("execution(* *Attachment(..))")
+10.	   public void logAttachment(){}
+11.	
+12.	   @Pointcut("execution(* *Service.*(..))")
+13.	   public void auth(){}
+14.	}
+
+在使用這些Pointcut時，指定完整的類名加上Pointcut簽名就可以了，如：
+java 代碼
+1.	package com.savage.aop;
+2.	
+3.	import org.aspectj.lang.JoinPoint;
+4.	import org.aspectj.lang.annotation.*;
+5.	
+6.	@Aspect
+7.	public class LogBeforeAdvice {
+8.	   @Before("com.sagage.aop.Pointcuts.logMessage()")
+9.	   public void before(JoinPoint joinPoint) {
+10.	      System.out.println("Logging before " + joinPoint.getSignature().getName());
+11.	   }
+12.	}
+
+當基於XML Sechma實現Advice時，如果Pointcut需要被重用，可以使用<aop:pointcut></aop:pointcut>來聲明Pointcut，然後在需要使用這個Pointcut的地方，用pointcut-ref引用就行了，如：
+xml 代碼
+ 
+1.	<aop:config>  
+2.	    <aop:pointcut id="log"   
+3.	          expression="execution(* com.savage.simplespring.bean.MessageSender.*(..))"/>  
+4.	    <aop:aspect id="logging" ref="logBeforeAdvice">  
+5.	        <aop:before pointcut-ref="log" method="before"/>  
+6.	        <aop:after-returning pointcut-ref="log" method="afterReturning"/>  
+7.	    </aop:aspect>  
+8.	</aop:config>  
+
