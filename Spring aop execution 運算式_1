@@ -1,0 +1,59 @@
+Spring aop execution 運算式
+Spring AOP 用戶可能會經常使用 execution pointcut designator。執行運算式的格式如下：
+
+execution(modifiers-pattern? ret-type-pattern declaring-type-pattern? name-pattern(param-pattern) throws-pattern?)
+除了返回類型模式（上面代碼片斷中的ret-type-pattern），名字模式和參數模式以外，所有的部分都是可選的。 返回類型模式決定了方法的返回類型必須依次匹配一個連接點。 你會使用的最頻繁的返回類型模式是 *，它代表了匹配任意的返回類型。 一個全稱限定的類型名將只會匹配返回給定類型的方法。名字模式匹配的是方法名。 你可以使用 * 萬用字元作為所有或者部分命名模式。 參數模式稍微有點複雜：() 匹配了一個不接受任何參數的方法， 而 (..) 匹配了一個接受任意數量參數的方法（零或者更多）。 模式 (*) 匹配了一個接受一個任何類型的參數的方法。 模式 (*,String) 匹配了一個接受兩個參數的方法，第一個可以是任意類型，第二個則必須是String類型。 請參見AspectJ程式設計指南的 Language Semantics 部分。
+
+下面給出一些常見切入點運算式的例子。
+
+任意公共方法的執行：
+
+execution(public * *(..))
+任何一個以“set”開始的方法的執行：
+
+execution(* set*(..))
+AccountService 介面的任意方法的執行：
+
+execution(* com.xyz.service.AccountService.*(..))
+定義在service包裡的任意方法的執行：
+
+execution(* com.xyz.service.*.*(..))
+定義在service包或者子包裡的任意方法的執行：
+
+execution(* com.xyz.service..*.*(..))
+在service包裡的任意連接點（在Spring AOP中只是方法執行） ：
+
+within(com.xyz.service.*)
+在service包或者子包裡的任意連接點（在Spring AOP中只是方法執行） ：
+
+within(com.xyz.service..*)
+實現了 AccountService 介面的代理物件的任意連接點（在Spring AOP中只是方法執行） ：
+
+this(com.xyz.service.AccountService)
+'this'在binding form中用的更多：- 請常見以下討論通知的章節中關於如何使得代理物件可以在通知體內訪問到的部分。
+實現了 AccountService 介面的目標物件的任意連接點（在Spring AOP中只是方法執行） ：
+
+target(com.xyz.service.AccountService)
+'target'在binding form中用的更多：- 請常見以下討論通知的章節中關於如何使得目標物件可以在通知體內訪問到的部分。
+任何一個隻接受一個參數，且在運行時傳入的參數實現了 Serializable 介面的連接點 （在Spring AOP中只是方法執行）
+
+args(java.io.Serializable)
+'args'在binding form中用的更多：- 請常見以下討論通知的章節中關於如何使得方法參數可以在通知體內訪問到的部分。
+請注意在例子中給出的切入點不同於 execution(* *(java.io.Serializable))： args只有在動態運行時候傳入參數是可序列化的（Serializable）才匹配，而execution 在傳入參數的簽名聲明的類型實現了Serializable 介面時候匹配。
+
+有一個 @Transactional 注解的目標物件中的任意連接點（在Spring AOP中只是方法執行）
+
+@target(org.springframework.transaction.annotation.Transactional)
+'@target' 也可以在binding form中使用：請常見以下討論通知的章節中關於如何使得annotation物件可以在通知體內訪問到的部分。
+任何一個目標物件聲明的類型有一個 @Transactional 注解的連接點（在Spring AOP中只是方法執行）
+
+@within(org.springframework.transaction.annotation.Transactional)
+'@within'也可以在binding form中使用：- 請常見以下討論通知的章節中關於如何使得annotation物件可以在通知體內訪問到的部分。
+任何一個執行的方法有一個 @Transactional annotation的連接點（在Spring AOP中只是方法執行）
+
+@annotation(org.springframework.transaction.annotation.Transactional)
+'@annotation' 也可以在binding form中使用：- 請常見以下討論通知的章節中關於如何使得annotation物件可以在通知體內訪問到的部分。
+任何一個接受一個參數，並且傳入的參數在運行時的類型實現了 @Classified annotation的連接點（在Spring AOP中只是方法執行）
+
+@args(com.xyz.security.Classified)
+'@args'也可以在binding form中使用：- 請常見以下討論通知的章節中關於如何使得annotation物件可以在通知體內訪問到的部分。
