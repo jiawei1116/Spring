@@ -1,0 +1,140 @@
+http://blog.csdn.net/legend_x/article/details/32713391
+
+安全篩檢程式鏈 
+Spring Security的web架構是完全基於標準的servlet篩檢程式的。 它沒有在內部使用servlet或任何其他基於servlet的框架（比如spring mvc）， 所以它沒有與任何特定的web技術強行關聯。 它只管處理HttpServletRequest 和HttpServletResponse，不關心請求時來自流覽器，web服務用戶端，HttpInvoker還是一個AJAX應用。 
+
+Spring Security維護了一個篩檢程式鏈，每個篩檢程式擁有特定的功能，篩檢程式需要服務也會對應添加和刪除。 篩檢程式的次序是非常重要的，它們之間都有依賴關係。 如果你已經使用了命名空間配置，篩檢程式會自動幫你配置， 你不需要定義任何Spring Bean，但是有時候你需要完全控制Spring篩檢程式鏈， 因為你使用了命名空間沒有提供的特性，或者你需要使用你自己自訂的類。 
+
+1. DelegatingFilterProxy 
+當使用servlet篩檢程式時，你很需要在你的web.xml中聲明它們， 它們可能被servlet容器忽略。在Spring Security，篩檢程式類也是定義在xml中的spring bean， 因此可以獲得Spring的依賴注入機制和生命週期介面。 spring的DelegatingFilterProxy提供了在 web.xml和application context之間的聯繫。 
+
+當使用DelegatingFilterProxy，你會看到像 web.xml檔中的這樣內容： 
+
+<filter> <filter-name>myFilter</filter-name> <filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class> </filter> <filter-mapping> <filter-name>myFilter</filter-name> <url-pattern>/*</url-pattern> </filter-mapping> 
+注意這個篩檢程式其實是一個DelegatingFilterProxy，這個篩檢程式裡沒有實現篩檢程式的任何邏輯。 DelegatingFilterProxy做的事情是代理Filter的方法，從application context裡獲得bean。 這讓bean可以獲得spring web application context的生命週期支援，使配置較為輕便。 bean必須實現javax.servlet.Filter介面，它必須和filter-name裡定義的名稱是一樣的。查看DelegatingFilterProxy的javadoc獲得更多資訊。 
+
+2. FilterChainProxy 
+現在應該清楚了，你可以聲明每個Spring Security篩檢程式bean，你在application context中需要的。 把一個DelegatingFilterProxy入口添加到web.xml， 確認它們的次序是正確的。 這是一種繁瑣的方式，會讓web.xml顯得十分雜亂，如果我們配置了太多篩檢程式的話。 我們最好添加一個單獨的入口，在web.xml中，然後在application context中處理實體， 管理我們的web安全bean。 這就是FilterChainProxy所做的事情。它使用DelegatingFilterProxy （就像上面例子中那樣），但是對應的class是org.springframework.security.web.FilterChainProxy。 篩檢程式鏈是在application context中聲明的。這裡有一個例子： 
+
+<bean id="filterChainProxy" class="org.springframework.security.web.FilterChainProxy"> <sec:filter-chain-map path-type="ant"> <sec:filter-chain pattern="/webServices/**" filters=" securityContextPersistenceFilterWithASCFalse, basicAuthenticationFilter, exceptionTranslationFilter, filterSecurityInterceptor" /> <sec:filter-chain pattern="/**" filters=" securityContextPersistenceFilterWithASCFalse, formLoginFilter, exceptionTranslationFilter, filterSecurityInterceptor" /> </sec:filter-chain-map> </bean> 
+你可能注意到FilterSecurityInterceptor聲明的不同方式。 命名空間元素filter-chain-map被用來設置安全篩檢程式鏈。 它映射一個特定的URL模式，到篩檢程式鏈中，從bean名稱來定義的filters元素。 它同時支援規則運算式和ant路徑，並且只使用第一個出現的匹配URI。 在運行階段FilterChainProxy會定位當前web請求匹配的第一個URI模式，由filters屬性指定的篩檢程式bean清單將開始處理請求。 篩檢程式會按照定義的順序依次執行，所以你可以對處理特定URL的篩檢程式鏈進行完全的控制。 
+
+你可能注意到了，我們在篩檢程式鏈裡聲明了兩個SecurityContextPersistenceFilter（ASC是allowSessionCreation的簡寫，是SecurityContextPersistenceFilter的一個屬性）。 因為web服務從來不會在請求裡帶上jsessionid，為每個使用者代理都創建一個HttpSession完全是一種浪費。 如果你需要構建一個高等級最高可擴展性的系統，我們推薦你使用上面的配置方法。 對於小一點兒的專案，使用一個HttpSessionContextIntegrationFilter（讓它的allowSessionCreation默認為true）就足夠了。 
+
+在有關聲明週期的問題上，如果這些方法被FilterChainProxy自己調用，FilterChainProxy會始終根據下一層的Filter代理init(FilterConfig)和destroy()方法。 這時，FilterChainProxy會保證初始化和銷毀操作只會在Filter上調用一次， 而不管它在篩檢程式鏈中被聲明了多少次）。你控制著所有的抉擇，比如這些方法是否被調用 或targetFilterLifecycle初始化參數DelegatingFilterProxy。 預設情況下，這個參數是false，servlet容器生命週期調用不會傳播到 DelegatingFilterProxy。 
+
+當我們瞭解如何使用命名控制配置構建web安全。 我們使用一個DelegatingFilterProxy，它的名字是“springSecurityFilterChain”。 你應該現在可以看到FilterChainProxy的名字，它是由命名空間創建的。 
+
+2.1. 繞過篩檢程式鏈 
+通過命名空間，你可以使用filters = "none"，來提供一個篩檢程式bean列表。 這會朝向請求模式，使用安全篩檢程式鏈整體。注意任何匹配這個模式的路徑不會有任何授權或校驗的服務 起作用，它們是可以自由訪問的。 
+
+3. 篩檢程式順序 
+定義在web.xml裡的篩檢程式的順序是非常重要的。 不論你實際使用的是哪個篩檢程式，<filter-mapping>的順序應該像下面這樣： 
+
+ChannelProcessingFilter，因為它可能需要重定向到其他協定。 
+
+ConcurrentSessionFilter，因為它不使用SecurityContextHolder功能，但是需要更新 SessionRegistry 來從主體中放映正在進行的請求。 
+
+SecurityContextPersistenceFilter，這樣 SecurityContext可以在web請求的開始階段通過 SecurityContextHolder建立，然後 SecurityContext的任何修改都會在web請求結束的時候（為下一個web請求做準備）複製到 HttpSession中。 
+
+驗證執行機制 - UsernamePasswordAuthenticationFilter, CasAuthenticationFilter, BasicAuthenticationFilter 等等 - 這樣 SecurityContextHolder 可以被修改，並包含一個合法的 Authentication 請求標誌。 
+
+SecurityContextHolderAwareRequestFilter，如果，你使用它，把一個Spring Security提醒HttpServletRequestWrapper安裝到你的servlet容器裡。 
+
+RememberMeAuthenticationFilter，這樣如果之前的驗證執行機制沒有更新 SecurityContextHolder，這個請求提供了一個可以使用的remember-me服務的cookie，一個對應的已保存的 Authentication物件會被創建出來。 
+
+AnonymousAuthenticationFilter，這樣如果之前的驗證執行機制沒有更新 SecurityContextHolder，會創建一個匿名 Authentication物件。 
+
+ExceptionTranslationFilter，用來捕捉 Spring Security異常，這樣，可能返回一個HTTP錯誤回應，或者執行一個對應的 AuthenticationEntryPoint。 
+
+FilterSecurityInterceptor，保護web URI。 
+
+4. 使用其他篩檢程式 —— 基於框架 
+如果你在使用SiteMesh，確認Spring Security篩檢程式在SiteMesh篩檢程式之前調用。 這可以保證SecurityContextHolder為每個SiteMesh渲染器及時創建。 
+
+
+
+5. 其他配置例子 
+方法一： 
+web.xml配置一個 
+    <filter> 
+        <filter-name>DelegatingFilterProxy</filter-name> 
+        <filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class> 
+        <init-param> 
+            <param-name>targetBeanName</param-name> 
+            <param-value>myFilter</param-value>         //自己篩檢程式的名字 
+        </init-param> 
+        <init-param> 
+            <param-name>targetFilterLifecycle</param-name> 
+            <param-value>true</param-value> 
+        </init-param> 
+    </filter> 
+
+    <filter-mapping> 
+        <filter-name>DelegatingFilterProxy</filter-name> 
+        <url-pattern>/*</url-pattern> 
+    </filter-mapping> 
+方法二： 
+web.xml配置一個 
+    <filter> 
+        <filter-name>myFilter</filter-name> 
+        <filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class> 
+        <init-param> 
+            <param-name>targetFilterLifecycle</param-name> 
+            <param-value>true</param-value> 
+        </init-param> 
+    </filter> 
+
+    <filter-mapping> 
+        <filter-name>myFilter</filter-name> 
+        <url-pattern>/*</url-pattern> 
+    </filter-mapping> 
+
+方法一或者二不同的地方就是在web.xml中的寫法不同而已沒有太大的區別，配完web.xml之後還要配置applicationContext.xml中的bean。 
+applicationContext.xml配置: 
+<bean id="myFilter" class="com.bjtu.filter"> //指名具體的filter類 
+    <property name="service">                    //需要注入的具體參數 
+        <ref bean="service"/> 
+    </property> 
+</bean> 
+<bean id="service" parent="baseTransactionProxy">//這裡的service封裝了所有對資料庫的操作 
+        <property name="target"> 
+            <bean class="com.maimaiche.service.MaiMaiCheServiceImpl"> 
+             ...... 
+             </bean> 
+       </property> 
+</bean> 
+
+-------------------------------------------------- 
+1、web.xml 
+Java代碼   
+1.	<!-- 所有filter,委託給spring -->  
+2.	    <filter>  
+3.	        <filter-name>appFilters</filter-name>  
+4.	        <filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>  
+5.	        <init-param>  
+6.	            <param-name>targetFilterLifecycle</param-name>  
+7.	            <param-value>true</param-value>  
+8.	        </init-param>  
+9.	    </filter>  
+10.	    <filter-mapping>  
+11.	        <filter-name>appFilters</filter-name>  
+12.	        <url-pattern>/*</url-pattern>  
+13.	    </filter-mapping>  
+
+
+2、applicationContext-filter.xml 
+Java代碼   
+1.	<bean id="appFilters" class="org.springframework.security.util.FilterChainProxy">  
+2.	        <security:filter-chain-map path-type="ant">  
+3.	            <security:filter-chain filters="characterEncodingFilter,commonParamsFilter"  
+4.	                pattern="/**" />  
+5.	        </security:filter-chain-map>  
+6.	    </bean>  
+7.	  
+8.	    <bean id="characterEncodingFilter" class="org.springframework.web.filter.CharacterEncodingFilter">  
+9.	        <property name="encoding" value="UTF-8" />  
+10.	        <property name="forceEncoding" value="true" />  
+11.	    </bean>  
+12.	    <bean id="commonParamsFilter" class="com.renren.wap.fuxi.filter.CommonParamsFilter" />  
+
