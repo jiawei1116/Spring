@@ -1,0 +1,26 @@
+http://blog.csdn.net/yousite1/article/details/7108585
+
+在使用spring時,經常需要在普通類中獲取session,request等對像.
+比如一些AOP攔截器類,在有使用struts2時,因為struts2有一個介面使用org.apache.struts2.ServletActionContext即可很方便的取到session對像.
+用法:ServletActionContext.getRequest().getSession();
+但在單獨使用spring時如何在普通類中獲取session,reuqest呢?
+其實也是有辦法的.
+首先要在web.xml增加如下代碼:
+ <listener>
+        <listener-class>org.springframework.web.context.request.RequestContextListener</listener-class>
+ </listener>
+
+接著在普通bean類中:
+    @Autowired
+    private HttpSession session;
+
+    @Autowired
+    private HttpServletRequest request;
+    
+即可,在類中使用session對像了,是不是很方便呢..
+之所以要寫出來是因為目前網上關於這個的用法,都是用什麼寫個lister再把session保存起來,太麻煩了.
+spring這麼強大的框架,當然他們早也想到了.所以才有了我們這麼方便的使用方法.
+
+
+當前加了上面的listener後也可以使用代碼的方式獲取reuqest對像
+HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
