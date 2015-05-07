@@ -1,0 +1,164 @@
+1. 通過靜態方法產生實體一個bean,產生實體出來的bean的類型對應於靜態方法的返回類型，這地點不同于普通的bean
+   (1) 靜態方法無參數：
+   <bean id="thefmbean" class="springtest.FactoryMethodBean" factory-method="getInstance" />
+  (2) 靜態方法有一個參數
+   <bean id="thenamedfmbean" class="springtest.FactoryMethodBean" 
+         factory-method="getNamedInstance">
+        <constructor-arg value="China" />
+  </bean>
+  這裡<constructor-arg value="China" />表示為靜態方法參數的值
+ (3) 對於(2)產生實體出來的bean，再進行屬性set
+   <bean id="thenamedfmbean" class="springtest.FactoryMethodBean" 
+         factory-method="getNamedInstance">
+        <constructor-arg value="China" />
+        <property name="id" value="20" />
+  </bean>
+2. 對一個已經產生實體的bean，得到其普通方法返回的物件,參數方式與1完全相同
+  <bean id="duke" class="springtest.Juggler">
+    <constructor-arg value="15" />
+  </bean>
+  <bean id="employee" factory-bean="duke" factory-method="getYourEmployee">
+    <constructor-arg value="Mike" />
+    <property name="id" value="18" />
+  </bean>
+
+
+  其中duke為以普通方式產生實體出來的bean,通過factory-method得到的是Employee的一個物件
+  
+package springtest;
+
+
+public interface Performer
+{
+
+
+void perform() throws PerformanceException;
+
+
+}
+package springtest;
+
+
+public class FactoryMethodBean implements Performer
+{
+private String name = "Hello";
+private int id;
+
+private FactoryMethodBean()
+{
+
+}
+
+public void setId(int id)
+{
+this.id = id;
+}
+
+private static class StaticFactoryMethodBean
+{
+static FactoryMethodBean instance = new FactoryMethodBean();
+}
+
+public static FactoryMethodBean getInstance()
+{
+return StaticFactoryMethodBean.instance;
+}
+
+public static FactoryMethodBean getNamedInstance(String tmpName)
+{
+StaticFactoryMethodBean.instance.name = tmpName;
+return StaticFactoryMethodBean.instance;
+}
+
+
+@Override
+    public void perform() throws PerformanceException
+    {
+   System.out.println("FactoryMethodBean.name = " + name);
+    }
+
+public String getNewName()
+{
+return "new name";
+}
+}
+
+
+package springtest;
+
+
+public class Juggler implements Performer
+{
+private int beanBags = 3;
+
+public Juggler()
+{
+
+}
+
+public Juggler(int beanBags)
+{
+this.beanBags = beanBags;
+}
+
+@Override
+public void perform() throws PerformanceException
+{
+System.out.println("Juggling " + beanBags + " beanBags");
+}
+
+public String getMyName()
+{
+return "My Name";
+}
+
+public String getYourName(String yourName)
+{
+return "Your name is " + yourName;
+}
+
+public Employee getYourEmployee(String adName)
+{
+return new Employee(adName);
+}
+}
+
+
+package springtest;
+
+
+public class Employee
+{
+private int id;
+private String name;
+
+public Employee(String name)
+{
+this.name = name;
+}
+
+public Employee()
+{
+
+}
+
+public void setId(int id)
+{
+this.id = id;
+}
+
+public void setName(String name)
+{
+this.name = name;
+}
+
+public int getId()
+{
+return id;
+}
+
+public String getName()
+{
+return name;
+}
+}
