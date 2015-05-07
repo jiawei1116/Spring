@@ -1,0 +1,55 @@
+<bean id="logMessageSelector" class="com.pic.pos3g.batch.comm.RequestIdentifier"
+		factory-method="getLogListenerMessageSelector">
+	<constructor-arg name="senderSystemName" value="${batch.sender.system.name}"/>
+</bean>
+
+<!-- and this is the message listener container -->
+<bean id="logJmsContainer" class="org.springframework.jms.listener.DefaultMessageListenerContainer">
+	<property name="connectionFactory" ref="connectionFactory"/>
+	<property name="destination" ref="mqdLogDestination"/>
+	<property name="messageListener" ref="logMessageListener" />
+	<!-- 
+	<property name="messageSelector" value="SYSTEM_NAME = '${batch.sender.system.name}'" />
+	-->
+	<property name="messageSelector" ref="logMessageSelector" />
+</bean>
+
+package com.pic.pos3g.batch.comm;
+
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
+public class RequestIdentifier {
+	
+	public static String getReplyListenerMessageSelector(String senderSystemName){
+		// 主機名稱
+		String hostName = "";
+		try {
+			hostName = InetAddress.getLocalHost().getHostName();
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return new StringBuilder()
+					.append(Identifier.SYSTEM_NAME).append(" = '").append(senderSystemName).append("'")
+					.append(" AND ").append(Identifier.HOST_NAME).append(" = '").append(hostName).append("'")
+					.toString()
+					;
+	}
+	
+	public static String getLogListenerMessageSelector(String senderSystemName){
+		// 主機名稱
+		String hostName = "";
+		try {
+			hostName = InetAddress.getLocalHost().getHostName();
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return new StringBuilder()
+					.append(Identifier.SYSTEM_NAME).append(" = '").append(senderSystemName).append("'")
+					.append(" AND ").append(Identifier.HOST_NAME).append(" = '").append(hostName).append("'")
+					.toString()
+					;
+	}
+}
