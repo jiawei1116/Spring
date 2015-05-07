@@ -1,3 +1,4 @@
+http://blog.csdn.net/hannover100/article/details/7882893
 1. 通過靜態方法產生實體一個bean,產生實體出來的bean的類型對應於靜態方法的返回類型，這地點不同于普通的bean
    (1) 靜態方法無參數：
    <bean id="thefmbean" class="springtest.FactoryMethodBean" factory-method="getInstance" />
