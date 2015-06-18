@@ -1,0 +1,12 @@
+另外在Spring 4.0以後新增@RestController，簡單說就是@Controller與@ResponseBody的結合，以下兩者code是等同的
+
+檢視原始檔複製到剪貼簿列印關於
+@Controller  
+@ResponseBody  
+@RequestMapping("/dcn")  
+public class DCNController {  
+}  
+  
+@RestController  
+@RequestMapping("/dcn"){  
+}  
