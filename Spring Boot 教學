@@ -13,3 +13,6 @@ https://github.com/spring-projects/spring-boot
 
 Using MySQL in Spring Boot via Spring Data JPA and Hibernate
 http://blog.netgloo.com/2014/10/27/using-mysql-in-spring-boot-via-spring-data-jpa-and-hibernate/
+
+Spring-boot JDBC with multiple DataSources sample
+http://xantorohara.blogspot.tw/2013/11/spring-boot-jdbc-with-multiple.html
