@@ -22,3 +22,8 @@ https://wefollownews.appspot.com/cittopnews201408_48/6348.html
 
 Day 22： 使用Spring、MongoDB和AngularJS開發單頁面應用
 http://segmentfault.com/a/1190000000367441
+
+靜態資源
+src/main/resources/static/index.html is mapped to /index.html & /
+
+js/css 可以放在src/main/resources中的 static or public 底下, spring boot會自動去mapping
