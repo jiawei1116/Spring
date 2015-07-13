@@ -1,0 +1,14 @@
+在spring boot中要使用html5時，需在application.yam中加入下述script
+spring:
+  thymeleaf:
+    mode:  LEGACYHTML5
+    cache: false
+
+pom.xml加入
+<dependency>
+   <groupId>net.sourceforge.nekohtml</groupId>
+   <artifactId>nekohtml</artifactId>
+   <version>1.9.21</version>
+</dependency>
+
+否則會有SAXParseException產生
