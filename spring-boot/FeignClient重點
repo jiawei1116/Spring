@@ -1,6 +1,9 @@
 若欲引用FeignClient之所屬的interface，
 則該引用的java檔要與FeignClient interface在同一個package或同一個package底下的子目錄。
 
+回傳的型態不可寫為Object
+public Object getString();
+
 ex:
 controller --> com.pic.controller
 FeignClient interface --> com.pic.controller.mService
