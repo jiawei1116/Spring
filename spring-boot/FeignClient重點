@@ -1,0 +1,29 @@
+若欲引用FeignClient之所屬的interface，
+則該引用的java檔要與FeignClient interface在同一個package
+
+package no.nb.microservices.delivery.microservice;
+/**
+ * Created by andreasb on 13.07.15.
+ */
+@FeignClient("catalog-item-service")
+public interface CatalogItemService {
+
+    @RequestMapping(method = RequestMethod.GET, value = "/{id}")
+    ItemResource getById(@PathVariable("id") String id);
+
+}
+
+
+package no.nb.microservices.delivery.service;
+@Service
+public class ItemService implements IItemService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ItemService.class);
+
+    private CatalogItemService catalogItemService;
+
+    @Autowired
+    public ItemService(CatalogItemService catalogItemService) {
+        this.catalogItemService = catalogItemService;
+    }
+}
