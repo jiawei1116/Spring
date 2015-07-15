@@ -1,9 +1,14 @@
 若欲引用FeignClient之所屬的interface，
-則該引用的java檔要與FeignClient interface在同一個package或同一個package底下的子目錄
+則該引用的java檔要與FeignClient interface在同一個package或同一個package底下的子目錄。
+
 ex:
 controller --> com.pic.controller
 FeignClient interface --> com.pic.controller.mService
 這樣也可
+
+且在controller的annotation設定如下
+@RestController
+@EnableFeignClients
 
 不可屬不同package
 ex:
