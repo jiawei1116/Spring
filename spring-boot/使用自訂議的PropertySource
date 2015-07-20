@@ -1,0 +1,9 @@
+/config/config.properties
+test.config=123
+
+1. 設定來源
+@PropertySource(value="classpath:config/config.properties")
+
+2.使用@Value
+@Value("${test.config}")
+	private String testValue;
