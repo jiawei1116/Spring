@@ -1,3 +1,8 @@
+若使用application.yml(properties)的設定檔，則不需執行下述動作，直接使用即可
+@Value("${server.port}")
+private String port;
+
+
 /config/config.properties
 test.config=123
 
@@ -6,4 +11,4 @@ test.config=123
 
 2.使用@Value
 @Value("${test.config}")
-	private String testValue;
+private String testValue;
