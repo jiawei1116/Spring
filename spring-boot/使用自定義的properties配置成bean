@@ -1,0 +1,56 @@
+Spring Boot使用自定义的properties
+http://wiselyman.iteye.com/blog/2184586
+
+USING @CONFIGURATIONPROPERTIES IN SPRING BOOT
+http://blog.codeleak.pl/2014/09/using-configurationproperties-in-spring.html
+
+===properties
+wisely.name=wangyunfei
+wisely.gender=male
+
+1.在application加入@EnableConfigurationProperties
+@SpringBootApplication
+@EnableConfigurationProperties({WiselySettings.class,Wisely2Settings.class})
+public class DemoApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(DemoApplication.class, args);
+    }
+}
+
+2. 在個別的bean注入
+@ConfigurationProperties(prefix = "wisely",locations = "classpath:config/wisely.properties")
+public class WiselySettings {
+	private String name;
+	private String gender;
+	public String getName() {
+		return name;
+	}
+	public void setName(String name) {
+		this.name = name;
+	}
+	public String getGender() {
+		return gender;
+	}
+	public void setGender(String gender) {
+		this.gender = gender;
+	}
+
+}
+
+3.在controller使用
+@Controller
+public class TestController {
+	@Autowired
+	WiselySettings wiselySettings;
+	@Autowired
+	Wisely2Settings wisely2Settings;
+
+	@RequestMapping("/test")
+	public @ResponseBody String test(){
+		System.out.println(wiselySettings.getGender()+"---"+wiselySettings.getName());
+		System.out.println(wisely2Settings.getGender()+"==="+wisely2Settings.getGender());
+		return "ok";
+	} 
+}
+
