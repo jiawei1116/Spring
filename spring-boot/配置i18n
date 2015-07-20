@@ -1,0 +1,56 @@
+================================1.配置文件來源================================
+@Configuration
+@EnableAutoConfiguration
+@ComponentScan(basePackages = {"com.pic.framework"})
+public class MvcConfig extends WebMvcConfigurerAdapter{
+    @Bean
+    public LocaleResolver localeResolver() {
+        SessionLocaleResolver slr = new SessionLocaleResolver();
+        slr.setDefaultLocale(Locale.TAIWAN);
+        //Locale defaultLocal = new Locale("ch");
+        //slr.setDefaultLocale(defaultLocal);
+        return slr;
+    }
+    
+    @Bean
+    public ResourceBundleMessageSource messageSource() {
+        ResourceBundleMessageSource resourceBundleMessageSource = new ResourceBundleMessageSource();
+        resourceBundleMessageSource.setBasenames(new String[]{"i18n/Messages"});
+        resourceBundleMessageSource.setDefaultEncoding("utf-8");
+//        resourceBundleMessageSource.setBasename("i18n/Messages");
+        return resourceBundleMessageSource;
+    }
+
+    /*
+    @Bean
+    public ReloadableResourceBundleMessageSource messageSource() {
+        ReloadableResourceBundleMessageSource messageSource = new ReloadableResourceBundleMessageSource();
+        messageSource.setBasename("classpath:/resources/i18n/Messages");
+        messageSource.setCacheSeconds(5); //reload messages every 10 seconds
+        return messageSource;
+    }*/
+
+    @Bean
+    public LocaleChangeInterceptor localeChangeInterceptor() {
+        LocaleChangeInterceptor localeChangeInterceptor = new LocaleChangeInterceptor();
+        localeChangeInterceptor.setParamName("language");
+        return localeChangeInterceptor;
+    }
+    
+    @Override
+    public void addInterceptors(InterceptorRegistry registry){
+    	registry.addInterceptor(localeChangeInterceptor());
+    }
+}
+
+
+================================2.程式使用方式================================
+1.自動注冊ResourceBundleMessageSource
+@Autowired
+ResourceBundleMessageSource i18nMessage;
+
+2.程式使用
+/**
+ * String code, Object[] args, Locale locale
+ */
+String test = i18nMessage.getMessage("main.test", null, null);
