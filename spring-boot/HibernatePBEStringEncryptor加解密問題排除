@@ -1,0 +1,15 @@
+
+HibernatePBEStringEncryptor加解密問題排除
+
+http://fanli7.net/a/JAVAbiancheng/Hibernate/20140603/511849.html
+
+至底下下載支援jce的jre jar檔，替換${javahome}\jdk1.7.0_67\jre\lib\security底下jar檔即可
+http://www.oracle.com/technetwork/java/javase/downloads/jce-7-download-432124.html
+
+Exception in thread "main" org.jasypt.exceptions.EncryptionOperationNotPossibleException: Encryption raised an exception. A possible cause is you are using strong encryption algorithms and you have not installed the Java Cryptography Extension (JCE) Unlimited Strength Jurisdiction Policy Files in this Java Virtual Machine
+	at org.jasypt.encryption.pbe.StandardPBEByteEncryptor.handleInvalidKeyException(StandardPBEByteEncryptor.java:1073)
+	at org.jasypt.encryption.pbe.StandardPBEByteEncryptor.encrypt(StandardPBEByteEncryptor.java:924)
+	at org.jasypt.encryption.pbe.StandardPBEStringEncryptor.encrypt(StandardPBEStringEncryptor.java:642)
+	at org.jasypt.hibernate4.encryptor.HibernatePBEStringEncryptor.encrypt(HibernatePBEStringEncryptor.java:364)
+	at com.pic.framework.config.Test.hibernatePBEStringEncryptor(Test.java:22)
+	at com.pic.framework.config.Test.main(Test.java:10)
