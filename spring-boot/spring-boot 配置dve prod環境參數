@@ -1,0 +1,10 @@
+spring-boot 配置dve prod環境參數
+
+http://www.cnblogs.com/lic309/p/4073307.html
+
+application.properties：主設定檔，spring-boot直接讀取這個檔。注：設定檔必須放在resources下，即放在專案根目錄下。
+application-dev.properties：開發環境設定檔，這個是我的開發環境的設定檔，為了簡化一些開發，所以需要一些與部署環境不同的配置，比如頁面緩存之類的。此檔通過application.properties的spring.profiles.active屬性進行配置讀取。
+
+# PROFILES
+## dev | prod | test
+spring.profiles.active=dev
