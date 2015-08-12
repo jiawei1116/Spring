@@ -1,0 +1,7 @@
+類名需符合 EntityNameRepository
+EX:
+@Repository
+public interface UamUserRepository extends JpaRepository<UamUser, String>{
+//	public UamUser findByUserId(String userId);
+	public UamUser findUserByUserIdAndPassword(String userId, String mima);
+}
