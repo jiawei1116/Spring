@@ -1,0 +1,45 @@
+在編寫 Spring Data JPA 的 DAO 時， 只需在接口中按規約提供方法的聲明即可。 而有些業務實現無法通過聲明方法或編寫簡單 SQL 實現， 這就需要擴展Spring Data JPA。
+
+問題 1： 為某一個特定 Repository 添加自定義方法。 
+具體步驟： 
+1) 定義一個接口 : 聲明要添加的方法  
+2) 提供該接口的實現類: 類名需符合 EntityNameRepositoryImpl 格式, 並提供方法的實現  
+3) 聲明一個 Repository 接口 , 並繼承 1) 聲明的接口 
+4) 使用  
+5) 注意： 默認情況下, Spring Data 會在 base-package 中查找 "接口名 Impl" 作為實現類. 
+也可以通過 repository-impl-postfix 聲明後綴
+
+Example:
+
+package com.pic.framework.repository;
+@Repository
+public interface UamUserRepository extends JpaRepository<UamUser, String>, IUamUserDAO{
+	public UamUser findUserByUserIdAndPassword(String userId, String mima);
+}
+
+package com.pic.framework.repository;
+public interface IUamUserDAO{
+	public List<UamUser> findUserListByRoleId(String roleId);
+}
+
+
+package com.pic.framework.repository.impl;
+public class UamUserRepositoryImpl implements IUamUserDAO{
+	@PersistenceContext
+	EntityManager entityManager;
+	
+	@Override
+	public List<UamUser> findUserListByRoleId(String roleId) {
+        StringBuffer sql = new StringBuffer();
+        sql.append(" SELECT uamUser ");
+        sql.append(" FROM UamUser uamUser, UamUserRole uamUserRole ");
+        sql.append(" WHERE 1=1 ");
+        sql.append(" AND uamUserRole.id.roleId = :roleId ");
+        sql.append(" AND uamUserRole.id.userId = uamUser.userId ");
+        
+        Query query = entityManager.createQuery(sql.toString(), UamUser.class);
+        query.setParameter("roleId", roleId);
+        
+		return query.getResultList();
+	}
+}
