@@ -1,0 +1,79 @@
+http://peaceful-developer.logdown.com/posts/223649-spring-teaching-2-about-requestmapping
+
+
+1. 以URL作為對應條件
+//指定從/hello會被對應到此hello()方法
+@RequestMapping("/hello")
+public @ResponseBody String hello(){
+    return "Hello World!";
+}
+
+2. 加入 HTTP RequestMethod 過濾
+//當HTTP Request Method 為 POST 時，由此方法處理
+//適合用來開發 RESTful 應用
+@RequestMapping(value="/hello", method = RequestMethod.POST)
+public @ResponseBody String helloByPOST(){
+    return "Hello By POST!";
+}
+
+3. 加入 HTTP Header 過濾
+//當 HTTP Request 具備此 header 時，由此方法處理
+@RequestMapping(value="/hello", headers = {"apiVersion=2.0"})
+public @ResponseBody String helloWithHeader(){
+    return "Hello With API Version 2";
+}
+
+*4. 加入 consumes 過濾條件 *
+//當 HTTP Request 的 Content-Type Header 為 application/json 時，由此方法處理
+//此為 3. headers 的一種特例
+@RequestMapping(value="/hello", consumes = "application/json" )
+public @ResponseBody String helloWithConsumes(){
+    return "Hello With Consumes";
+}
+
+5. 加入 produces 過濾
+//當 HTTP Request 的 Accept Header 包含 application/json 時，由此方法處理
+//此為 headers 的一種特例
+@RequestMapping(value="/hello", produces = "application/json")
+public @ResponseBody String helloWithProduces(){
+    return "Hello With Produces";
+}
+
+6. 加入 HTTP Request 參數過濾
+//當 HTTP Request 帶有 name 參數時，由此方法處理
+@RequestMapping(value="/hello", params = "name")
+public @ResponseBody String helloWithName(
+                    @RequestParam("name") String name){
+    return "Hello With Name: " + name;
+} 
+
+7. 多重過濾條件
+//上述幾個參數皆能一次指定多個，例如：
+//當 method 為 POST 或 PUT
+//且 Content-Type 為 text/plain 或 application/xml
+//由此方法處理
+@RequestMapping(value="/hello",
+        method = {RequestMethod.POST, RequestMethod.PUT},
+        consumes = {"text/plain", "application/xml"})
+public @ResponseBody String helloWithMultiple(){
+    return "Hello By Produces";
+}
+
+8. 加入URL參數過濾
+//同時指定多個 @PathVariable
+@RequestMapping("/hello/{name1}/{name2}")
+public @ResponseBody String helloWithTwoPeople(
+                @PathVariable("name1") String name1, 
+                @PathVariable("name2") String name2){
+    return "Hello " + name1 + ", " + name2;
+}
+
+9. 以 regular expression 過濾 URL 參數
+//當網址符合此格式，且電話號碼符合(0900-000-000)時，以此方法處理
+@RequestMapping(
+    "/hello/{name}/phone/{phone:[\\d]{4}-[\\d]{3}-[\\d]{3}}")
+public @ResponseBody String helloWithPhone(
+                @PathVariable("name") String name,
+                @PathVariable("phone") String phone){
+    return "Hello " + name + ", your phone number is " + phone;
+}
