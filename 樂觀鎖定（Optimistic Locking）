@@ -1,0 +1,48 @@
+樂觀鎖定（Optimistic locking）樂觀的認為資料很少發生同時存取的問題，通常在資料庫層級上設為read-commited隔離層級，並實行樂觀鎖定。
+
+在read commited隔離層級之下，允許交易讀取另一個交易已COMMIT的資料，但可能有unrepeatable read與lost update的問題存在，例如：
+交易A讀取欄位1
+交易B讀取欄位1
+交易A更新欄位1並COMMIT
+交易B更新欄位1並COMMIT
+
+交易B可能基於舊的資料來更新欄位，使得交易A的資料遺失，或者是：
+交易A讀取欄位1、2
+交易B讀取欄位1、2
+交易A更新欄位1、2，欄位1是新資料，欄位2是舊資料，並COMMIT
+交易A更新欄位1、2，欄位1是舊資料，欄位2是新資料，並COMMIT
+
+為了維護正確的資料，樂觀鎖定使用應用程式上的邏輯實現版 本控制的解決。 
+
+對於lost update的問題，可以有幾種選擇：
+先更新為主（First commit wins）
+交易A先COMMIT，交易B在COMMIT時會得到錯誤訊息，表示更新失敗，交易B必須重新取得資料，嘗試進行更新。
+後更新的為主（Last commit wins）
+交易A、B都可以COMMIT，交易B覆蓋交易A的資料也無所謂。
+合併衝突更新（Merge conflicting update）
+先更新為主的變化應用，交易A先COMMIT，交易B要更新時會得到錯誤訊息，提示使用者檢查所有欄位，選擇性的更新沒有衝突的欄位。
+
+Hibernate中透過版本號檢查來實現先更新為主，這也是Hibernate所推薦的方式，在資料庫中加入一個version欄位記錄，在讀取資料時 連同版本號一同讀取，並在更新資料時比對版本號與資料庫中的版本號，如果等於資料庫中的版本號則予以更新，並遞增版本號，如果小於資料庫中的版本號就丟出 例外。
+
+另一方式
+不以版號, 以timestamp為控制方式
+ex:
+1.可建立一支abstract, 使用@org.hibernate.annotations.Entity(dynamicUpdate = true, optimisticLock = OptimisticLockType.VERSION)
+  讓各model來extends
+package com.kkbox.cm.model;
+import org.hibernate.annotations.OptimisticLockType;
+@org.hibernate.annotations.Entity(dynamicUpdate = true, optimisticLock = OptimisticLockType.VERSION)
+public abstract class BaseModel {
+}
+
+2.此方式需放在@Id後面
+private Date lastUpdate;
+@Temporal(TemporalType.TIMESTAMP)
+@Column(name = "last_pdate")
+@Version
+public Date getLastUpdate() {
+    return lastUpdate;
+}
+public void setLastUpdate(Date lastUpdate) {
+    this.lastUpdate = lastUpdate;
+}
