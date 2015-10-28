@@ -46,3 +46,6 @@ public Date getLastUpdate() {
 public void setLastUpdate(Date lastUpdate) {
     this.lastUpdate = lastUpdate;
 }
+
+3. postgresql的timestamp without time zone欄位, lenght設為0, 及不會有毫秒
+   last_pdate timestamp(0) without time zone,
