@@ -1,0 +1,25 @@
+Hibernate, Spring, Dao getSession()
+http://stackoverflow.com/questions/16064707/hibernate-spring-dao-getsession-nullpointerexception
+
+1.
+package com.kkbox.cm.core;
+public class BaseDaoHibernate<Model extends Object> extends HibernateDaoSupport{
+  @Resource(name="sessionFactory") //為父類HibernateDaoSupport注入sessionFactory的值
+  public void setSuperSessionFactory(SessionFactory sessionFactory){
+      super.setSessionFactory(sessionFactory);
+  }
+}
+
+2.extends BaseDaoHibernate
+
+3.(example)
+@Repository
+public class VendorDaoImpl extends CmmBaseDaoImpl<KkboxCmVendor> implements IVendorDao{
+  private List<KkboxCmVendor> findVendorByCondition(KkboxCmVendor vendor, PageVO page, String startDate, String endDate)
+			throws BaseServiceException {
+			  Criteria criteria = getSessionFactory().getCurrentSession().createCriteria(KkboxCmVendor.class);
+			}
+}
+
+
+
